@@ -1,3 +1,9 @@
 spring:
   application:
     name: pnc-parcial-final-restaurante
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:cambiar-este-secreto-en-produccion-por-uno-largo-y-random}
+    access-expiration-ms: ${JWT_ACCESS_EXPIRATION_MS:900000}
+    refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
