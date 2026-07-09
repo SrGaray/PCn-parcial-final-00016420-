@@ -2,8 +2,41 @@ spring:
   application:
     name: pnc-parcial-final-restaurante
 
+  datasource:
+    url: jdbc:h2:mem:restaurante;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    open-in-view: false
+
 app:
   jwt:
     secret: ${JWT_SECRET:cambiar-este-secreto-en-produccion-por-uno-largo-y-random}
     access-expiration-ms: ${JWT_ACCESS_EXPIRATION_MS:900000}
     refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:db}:${DB_PORT:5432}/${DB_NAME:restaurante}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USER:restaurante}
+    password: ${DB_PASSWORD:restaurante}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect

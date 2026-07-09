@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: restaurante-db
+    environment:
+      POSTGRES_DB: restaurante
+      POSTGRES_USER: restaurante
+      POSTGRES_PASSWORD: restaurante
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U restaurante"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    container_name: restaurante-api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: restaurante
+      DB_USER: restaurante
+      DB_PASSWORD: restaurante
+      JWT_SECRET: ${JWT_SECRET:-cambiar-este-secreto-en-produccion-por-uno-largo-y-random}
+    ports:
+      - "8080:8080"
+
+volumes:
+  db-data:

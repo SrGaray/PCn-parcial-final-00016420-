@@ -1,4 +1,54 @@
-# Parcial Final - Programación N-Capas: Sistema de Pedidos de Restaurante
+# Sistema de Pedidos de Restaurante
+
+API backend para un sistema de pedidos de una cadena de restaurantes con varias sucursales, desarrollada con arquitectura N-Capas (Presentación / Lógica de Negocio / Acceso a Datos) usando Spring Boot.
+
+## Cómo levantar el proyecto
+
+Requiere Docker y Docker Compose.
+
+```bash
+docker-compose up
+```
+
+Esto levanta dos contenedores: la API (puerto `8080`) y la base de datos Postgres (puerto `5432`). Al iniciar, la API crea automáticamente sucursales, mesas, productos y usuarios de prueba (ver `DataInitializer`).
+
+Usuarios de prueba (contraseña entre paréntesis):
+
+| Username | Rol | Sucursal | Password |
+|---|---|---|---|
+| `admin` | ADMIN | - | `admin123` |
+| `encargado.centro` | ENCARGADO | Sucursal Centro | `encargado123` |
+| `encargado.norte` | ENCARGADO | Sucursal Norte | `encargado123` |
+| `cliente1` | CLIENTE | - | `cliente123` |
+
+### Autenticación
+
+```
+POST /api/auth/login       { "username": "...", "password": "..." }  -> accessToken + refreshToken
+POST /api/auth/refresh     { "refreshToken": "..." }                 -> nuevo accessToken + refreshToken
+```
+
+El `accessToken` expira en 15 minutos y se manda en cada request como `Authorization: Bearer <token>`. El `refreshToken` expira en 7 días y se rota (queda inválido) cada vez que se usa.
+
+## Arquitectura de capas
+
+- **Presentación** (`controller`, `dto`): expone los endpoints REST, valida la entrada y traduce entre DTOs y entidades. No contiene lógica de negocio.
+- **Lógica de negocio** (`service`, `security`): reglas de autorización, validaciones, generación/validación de JWT, orquestación de los repositorios.
+- **Acceso a datos** (`repository`, `entity`): entidades JPA y repositorios Spring Data, sin conocimiento de HTTP ni de reglas de negocio.
+
+## Roles
+
+| Rol | Permisos |
+|---|---|
+| `ADMIN` | Acceso total a sucursales, mesas, usuarios y pedidos de todas las sucursales |
+| `ENCARGADO` | Gestiona mesas y pedidos, pero únicamente de la sucursal a la que pertenece |
+| `CLIENTE` | Crea, ve y cancela únicamente sus propios pedidos |
+
+## Regla de negocio: autorización por sucursal
+
+Se implementó la **opción B** del enunciado: un `ENCARGADO` no puede operar mesas ni pedidos de otra sucursal, aunque tenga el rol correcto. Esto no se resuelve con `hasRole()`: en `MesaService.validarAccesoSucursal()` y `PedidoService.validarAcceso()` se compara la sucursal del usuario autenticado (`UsuarioPrincipal.getSucursalId()`, sacada del JWT) contra la sucursal de la mesa/pedido que se quiere modificar. Si no coinciden, se devuelve `403 Forbidden`. Un `CLIENTE`, de forma análoga, solo puede acceder a pedidos donde figura como cliente.
+
+---
 
 ## Parte 2 (50% Global del Parcial)
 
